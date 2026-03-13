@@ -49,7 +49,8 @@ ENV NODE_ENV=production \
   PAPERCLIP_CONFIG=/paperclip/instances/default/config.json \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
   PAPERCLIP_DEPLOYMENT_EXPOSURE=private \
-  CREDENTIALS_URL=http://example.com/index.html
+  CREDENTIALS_URL=http://example.com/index.html \
+  CREDENTIALS_SETTINGS_URL=http://example.com/index.html
 
 EXPOSE 3100
 
