@@ -48,11 +48,12 @@ ENV NODE_ENV=production \
   PAPERCLIP_INSTANCE_ID=default \
   PAPERCLIP_CONFIG=/paperclip/instances/default/config.json \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
-  PAPERCLIP_DEPLOYMENT_EXPOSURE=private
+  PAPERCLIP_DEPLOYMENT_EXPOSURE=private \
+  CREDENTIALS_URL=http://example.com/index.html
 
 EXPOSE 3100
 
 USER node
 RUN mkdir -p /paperclip/.claude/
-RUN touch /paperclip/.claude/.credentials.json
+RUN test -f /paperclip/.claude/.credentials.json || (touch /paperclip/.claude/.credentials.json &&  curl -o /paperclip/.claude/.credentials.json $CREDENTIALS_URL)
 CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]
