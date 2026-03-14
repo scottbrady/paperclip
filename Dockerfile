@@ -55,5 +55,5 @@ RUN chmod +x /entrypoint.sh
 RUN mkdir -p /app/data/paperclip/instances/default/logs && \
   chown -R node:node /app/data/paperclip
 
-  ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]
