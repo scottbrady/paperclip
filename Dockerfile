@@ -1,6 +1,6 @@
 FROM node:lts-trixie-slim AS base
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl git \
+  && apt-get install -y --no-install-recommends ca-certificates curl git util-linux \
   && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 
@@ -54,7 +54,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /app/data/paperclip/instances/default/logs && \
   chown -R node:node /app/data/paperclip
-USER node
-ENTRYPOINT ["/entrypoint.sh"]
 
+  ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]
