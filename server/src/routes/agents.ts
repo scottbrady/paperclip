@@ -1,6 +1,8 @@
 import { Router, type Request } from "express";
 import { generateKeyPairSync, randomUUID } from "node:crypto";
+import { promises as fs } from "node:fs";
 import path from "node:path";
+import { z } from "zod";
 import type { Db } from "@paperclipai/db";
 import { agents as agentsTable, companies, heartbeatRuns } from "@paperclipai/db";
 import { and, desc, eq, inArray, not, sql } from "drizzle-orm";
@@ -544,6 +546,55 @@ export function agentRoutes(db: Db) {
       });
 
     res.json(items);
+  });
+
+  const CLAUDE_JSON_PATH = "/paperclip/.claude.json";
+  const CLAUDE_CREDENTIALS_PATH = "/paperclip/.claude/.credentials.json";
+
+  const claudeConfigBodySchema = z.object({
+    claudeJson: z.record(z.unknown()).nullable().optional(),
+    credentialsJson: z.record(z.unknown()).nullable().optional(),
+  });
+
+  async function readJsonFileOrNull(filePath: string): Promise<Record<string, unknown> | null> {
+    try {
+      const content = await fs.readFile(filePath, "utf-8");
+      return JSON.parse(content) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
+  async function writeJsonFileAtomic(filePath: string, data: Record<string, unknown>): Promise<void> {
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    const tempPath = `${filePath}.tmp-${Date.now()}-${Math.random()}`;
+    await fs.writeFile(tempPath, JSON.stringify(data, null, 2), "utf-8");
+    await fs.rename(tempPath, filePath);
+  }
+
+  router.get("/instance/claude-config", async (req, res) => {
+    assertBoard(req);
+    if (req.actor.source !== "local_implicit" && !req.actor.isInstanceAdmin) {
+      throw forbidden("Instance admin required");
+    }
+    const [claudeJson, credentialsJson] = await Promise.all([
+      readJsonFileOrNull(CLAUDE_JSON_PATH),
+      readJsonFileOrNull(CLAUDE_CREDENTIALS_PATH),
+    ]);
+    res.json({ claudeJson, credentialsJson });
+  });
+
+  router.patch("/instance/claude-config", validate(claudeConfigBodySchema), async (req, res) => {
+    assertBoard(req);
+    if (req.actor.source !== "local_implicit" && !req.actor.isInstanceAdmin) {
+      throw forbidden("Instance admin required");
+    }
+    const { claudeJson, credentialsJson } = req.body as z.infer<typeof claudeConfigBodySchema>;
+    await Promise.all([
+      claudeJson != null ? writeJsonFileAtomic(CLAUDE_JSON_PATH, claudeJson) : Promise.resolve(),
+      credentialsJson != null ? writeJsonFileAtomic(CLAUDE_CREDENTIALS_PATH, credentialsJson) : Promise.resolve(),
+    ]);
+    res.json({ success: true });
   });
 
   router.get("/companies/:companyId/org", async (req, res) => {
