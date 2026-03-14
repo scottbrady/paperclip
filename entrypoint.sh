@@ -1,4 +1,4 @@
 #!/bin/sh
-# mkdir -p /data/paperclip
-# chown -R node:node /data/paperclip
-# exec su-exec node "$@"
+mkdir -p /app/data/paperclip
+chown -R node:node /app/data/paperclip
+exec setpriv --reuid=1000 --regid=1000 --init-groups "$@"
