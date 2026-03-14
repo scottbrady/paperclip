@@ -14,6 +14,7 @@ import {
   ensurePathInEnv,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
+import os from "node:os";
 import path from "node:path";
 import { detectClaudeLoginRequired, parseClaudeStreamJson } from "./parse.js";
 
@@ -185,6 +186,11 @@ export async function testEnvironment(
           hint: loginMeta.loginUrl
             ? `Run \`claude login\` and complete sign-in at ${loginMeta.loginUrl}, then retry.`
             : "Run `claude login` in this environment, then retry the probe.",
+        });
+        checks.push({
+          code: "claude_hello_probe_home_dir",
+          level: "info",
+          message: `Home directory: ${os.homedir()}`,
         });
       } else if ((probe.exitCode ?? 1) === 0) {
         const summary = parsedStream.summary.trim();
