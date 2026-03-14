@@ -1,4 +1,4 @@
 #!/bin/sh
-mkdir -p /paperclip
-chown -R node:node /paperclip
-exec su-exec node "$@"
+mkdir -p /data/paperclip
+chown -R node:node /data/paperclip
+exec gosu node "$@"
