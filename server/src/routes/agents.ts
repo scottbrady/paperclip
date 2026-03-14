@@ -2,6 +2,7 @@ import { Router, type Request } from "express";
 import { generateKeyPairSync, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { resolvePaperclipHomeDir } from "../home-paths.js";
 import { z } from "zod";
 import type { Db } from "@paperclipai/db";
 import { agents as agentsTable, companies, heartbeatRuns } from "@paperclipai/db";
@@ -548,8 +549,8 @@ export function agentRoutes(db: Db) {
     res.json(items);
   });
 
-  const CLAUDE_JSON_PATH = "/paperclip/.claude.json";
-  const CLAUDE_CREDENTIALS_PATH = "/paperclip/.claude/.credentials.json";
+  const CLAUDE_JSON_PATH = path.resolve(resolvePaperclipHomeDir(), ".claude.json");
+  const CLAUDE_CREDENTIALS_PATH = path.resolve(resolvePaperclipHomeDir(), ".claude", ".credentials.json");
 
   const claudeConfigBodySchema = z.object({
     claudeJson: z.record(z.unknown()).nullable().optional(),
@@ -581,7 +582,7 @@ export function agentRoutes(db: Db) {
       readJsonFileOrNull(CLAUDE_JSON_PATH),
       readJsonFileOrNull(CLAUDE_CREDENTIALS_PATH),
     ]);
-    res.json({ claudeJson, credentialsJson });
+    res.json({ claudeJson, credentialsJson, claudeJsonPath: CLAUDE_JSON_PATH, credentialsJsonPath: CLAUDE_CREDENTIALS_PATH });
   });
 
   router.patch("/instance/claude-config", validate(claudeConfigBodySchema), async (req, res) => {

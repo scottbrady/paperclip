@@ -3,6 +3,8 @@ import { api } from "./client";
 export interface ClaudeConfigResponse {
   claudeJson: Record<string, unknown> | null;
   credentialsJson: Record<string, unknown> | null;
+  claudeJsonPath: string;
+  credentialsJsonPath: string;
 }
 
 export const claudeConfigApi = {

@@ -183,7 +183,7 @@ export function ClaudeConfig() {
       <ConfigSection
         title="Claude Settings"
         description="Global Claude Code settings used by agents."
-        filePath="/paperclip/.claude.json"
+        filePath={configQuery.data?.claudeJsonPath ?? "/paperclip/.claude.json"}
         value={claudeJsonText}
         onChange={setClaudeJsonText}
         onSave={handleSaveClaudeJson}
@@ -194,7 +194,7 @@ export function ClaudeConfig() {
       <ConfigSection
         title="Claude Credentials"
         description="Claude Code credentials including API keys."
-        filePath="/paperclip/.claude/.credentials.json"
+        filePath={configQuery.data?.credentialsJsonPath ?? "/paperclip/.claude/.credentials.json"}
         value={credentialsJsonText}
         onChange={setCredentialsJsonText}
         onSave={handleSaveCredentials}
