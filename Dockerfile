@@ -38,13 +38,13 @@ COPY --chown=node:node --from=build /app /app
 RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai
 
 ENV NODE_ENV=production \
-  HOME=/data/paperclip \
+  HOME=/app/data/paperclip \
   HOST=0.0.0.0 \
   PORT=3100 \
   SERVE_UI=true \
-  PAPERCLIP_HOME=/data/paperclip \
+  PAPERCLIP_HOME=/app/data/paperclip \
   PAPERCLIP_INSTANCE_ID=default \
-  PAPERCLIP_CONFIG=/data/paperclip/instances/default/config.json \
+  PAPERCLIP_CONFIG=/app/data/paperclip/instances/default/config.json \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
   PAPERCLIP_DEPLOYMENT_EXPOSURE=private
 
