@@ -65,6 +65,11 @@ export async function testEnvironment(
       level: "info",
       message: `Working directory is valid: ${cwd}`,
     });
+    checks.push({
+      code: "claude_hello_probe_home_dir",
+      level: "info",
+      message: `Home directory: ${os.homedir()}`,
+    });
   } catch (err) {
     checks.push({
       code: "claude_cwd_invalid",
@@ -186,11 +191,6 @@ export async function testEnvironment(
           hint: loginMeta.loginUrl
             ? `Run \`claude login\` and complete sign-in at ${loginMeta.loginUrl}, then retry.`
             : "Run `claude login` in this environment, then retry the probe.",
-        });
-        checks.push({
-          code: "claude_hello_probe_home_dir",
-          level: "info",
-          message: `Home directory: ${os.homedir()}`,
         });
       } else if ((probe.exitCode ?? 1) === 0) {
         const summary = parsedStream.summary.trim();
