@@ -569,7 +569,7 @@ export function agentRoutes(db: Db) {
   async function writeJsonFileAtomic(filePath: string, data: Record<string, unknown>): Promise<void> {
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     const tempPath = `${filePath}.tmp-${Date.now()}-${Math.random()}`;
-    await fs.writeFile(tempPath, JSON.stringify(data, null, 2), "utf-8");
+    await fs.writeFile(tempPath, JSON.stringify(data, null, 2), { encoding: "utf-8", mode: 0o600 });
     await fs.rename(tempPath, filePath);
   }
 
