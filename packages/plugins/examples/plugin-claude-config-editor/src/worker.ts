@@ -3,19 +3,13 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-function resolvePaperclipHome(): string {
-  const envHome = process.env.PAPERCLIP_HOME?.trim();
-  if (envHome) {
-    if (envHome === "~") return os.homedir();
-    if (envHome.startsWith("~/")) return path.resolve(os.homedir(), envHome.slice(2));
-    return path.resolve(envHome);
-  }
-  return path.resolve(os.homedir(), ".paperclip");
-}
-
-const PAPERCLIP_HOME = resolvePaperclipHome();
-const CLAUDE_JSON_PATH = path.resolve(PAPERCLIP_HOME, ".claude.json");
-const CLAUDE_CREDENTIALS_PATH = path.resolve(PAPERCLIP_HOME, ".claude", ".credentials.json");
+// Plugin workers run in a sandboxed environment without PAPERCLIP_HOME.
+// Use HOME directly — in Docker containers this is set to the data directory
+// (e.g. /app/data/paperclip), and locally it's the user's home directory.
+// The Claude config files live at ~/.claude.json and ~/.claude/.credentials.json.
+const HOME_DIR = os.homedir();
+const CLAUDE_JSON_PATH = path.resolve(HOME_DIR, ".claude.json");
+const CLAUDE_CREDENTIALS_PATH = path.resolve(HOME_DIR, ".claude", ".credentials.json");
 
 async function readJsonFileOrNull(filePath: string): Promise<Record<string, unknown> | null> {
   try {
