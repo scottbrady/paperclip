@@ -609,6 +609,7 @@ export function createPluginWorkerHandle(
     // secrets (like DATABASE_URL, internal API keys, etc.).
     const workerEnv: Record<string, string> = {
       ...options.env,
+      HOME: process.env.HOME ?? "",
       PATH: process.env.PATH ?? "",
       NODE_PATH: process.env.NODE_PATH ?? "",
       PAPERCLIP_PLUGIN_ID: pluginId,
