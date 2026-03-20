@@ -1,4 +1,4 @@
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect, useRef, type CSSProperties } from "react";
 import {
   usePluginData,
   usePluginAction,
@@ -36,10 +36,10 @@ const textareaStyle: CSSProperties = {
   fontFamily: "monospace",
   fontSize: "13px",
   padding: "8px",
-  border: "1px solid #333",
+  border: "1px solid var(--border)",
   borderRadius: "4px",
-  background: "#1a1a1a",
-  color: "#e0e0e0",
+  background: "var(--input)",
+  color: "var(--foreground)",
   resize: "vertical",
 };
 
@@ -47,9 +47,9 @@ const buttonStyle: CSSProperties = {
   padding: "6px 16px",
   fontSize: "13px",
   borderRadius: "4px",
-  border: "1px solid #444",
-  background: "#2a2a2a",
-  color: "#e0e0e0",
+  border: "1px solid var(--border)",
+  background: "var(--secondary)",
+  color: "var(--secondary-foreground)",
   cursor: "pointer",
 };
 
@@ -66,6 +66,7 @@ function ConfigSection({
   onChange,
   onSave,
   saving,
+  confirmBeforeSave,
 }: {
   label: string;
   filePath: string;
@@ -73,9 +74,19 @@ function ConfigSection({
   onChange: (value: string) => void;
   onSave: () => void;
   saving: boolean;
+  confirmBeforeSave?: boolean;
 }) {
   const isValid = text.trim() === "" || tryParseJson(text) !== null;
   const canSave = text.trim() !== "" && isValid && !saving;
+
+  function handleSave() {
+    if (confirmBeforeSave) {
+      if (!window.confirm(`Are you sure you want to save ${label}? This will overwrite the existing file.`)) {
+        return;
+      }
+    }
+    onSave();
+  }
 
   return (
     <div style={sectionStyle}>
@@ -85,7 +96,7 @@ function ConfigSection({
           type="button"
           style={canSave ? buttonStyle : disabledButtonStyle}
           disabled={!canSave}
-          onClick={onSave}
+          onClick={handleSave}
         >
           {saving ? "Saving…" : "Save"}
         </button>
@@ -94,20 +105,20 @@ function ConfigSection({
       <textarea
         style={{
           ...textareaStyle,
-          borderColor: !isValid ? "#c53030" : "#333",
+          borderColor: !isValid ? "var(--destructive)" : undefined,
         }}
         value={text}
         onChange={(e) => onChange(e.target.value)}
         spellCheck={false}
       />
       {!isValid && (
-        <div style={{ fontSize: "12px", color: "#c53030" }}>Invalid JSON</div>
+        <div style={{ fontSize: "12px", color: "var(--destructive)" }}>Invalid JSON</div>
       )}
     </div>
   );
 }
 
-export function ClaudeConfigSettingsPage({ context }: PluginSettingsPageProps) {
+export function ClaudeConfigSettingsPage(_props: PluginSettingsPageProps) {
   const { data, loading, error, refresh } = usePluginData<ClaudeConfigData>("claude-config");
   const saveConfig = usePluginAction("save-claude-config");
   const toast = usePluginToast();
@@ -116,9 +127,11 @@ export function ClaudeConfigSettingsPage({ context }: PluginSettingsPageProps) {
   const [credentialsJsonText, setCredentialsJsonText] = useState("");
   const [savingClaude, setSavingClaude] = useState(false);
   const [savingCredentials, setSavingCredentials] = useState(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || initializedRef.current) return;
+    initializedRef.current = true;
     setClaudeJsonText(data.claudeJson ? JSON.stringify(data.claudeJson, null, 2) : "");
     setCredentialsJsonText(data.credentialsJson ? JSON.stringify(data.credentialsJson, null, 2) : "");
   }, [data]);
@@ -130,6 +143,7 @@ export function ClaudeConfigSettingsPage({ context }: PluginSettingsPageProps) {
     try {
       await saveConfig({ claudeJson: parsed });
       toast({ title: "Claude settings saved", tone: "success" });
+      initializedRef.current = false;
       refresh();
     } catch (err) {
       toast({ title: "Failed to save Claude settings", body: String(err), tone: "error" });
@@ -145,6 +159,7 @@ export function ClaudeConfigSettingsPage({ context }: PluginSettingsPageProps) {
     try {
       await saveConfig({ credentialsJson: parsed });
       toast({ title: "Credentials saved", tone: "success" });
+      initializedRef.current = false;
       refresh();
     } catch (err) {
       toast({ title: "Failed to save credentials", body: String(err), tone: "error" });
@@ -154,18 +169,18 @@ export function ClaudeConfigSettingsPage({ context }: PluginSettingsPageProps) {
   }
 
   if (loading) {
-    return <div style={{ fontSize: "12px", opacity: 0.7 }}>Loading Claude config…</div>;
+    return <div style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>Loading Claude config…</div>;
   }
 
   if (error) {
-    return <div style={{ fontSize: "12px", color: "#c53030" }}>Error loading config: {error.message}</div>;
+    return <div style={{ fontSize: "12px", color: "var(--destructive)" }}>Error loading config: {error.message}</div>;
   }
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
       <div>
         <strong style={{ fontSize: "15px" }}>Claude Code Configuration</strong>
-        <div style={{ fontSize: "13px", opacity: 0.7, marginTop: "4px" }}>
+        <div style={{ fontSize: "13px", color: "var(--muted-foreground)", marginTop: "4px" }}>
           Edit the Claude Code settings and credentials files used by agents on this instance.
         </div>
       </div>
@@ -186,6 +201,7 @@ export function ClaudeConfigSettingsPage({ context }: PluginSettingsPageProps) {
         onChange={setCredentialsJsonText}
         onSave={handleSaveCredentials}
         saving={savingCredentials}
+        confirmBeforeSave
       />
     </div>
   );

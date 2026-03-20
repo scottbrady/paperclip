@@ -21,16 +21,24 @@ async function readJsonFileOrNull(filePath: string): Promise<Record<string, unkn
   try {
     const content = await fs.readFile(filePath, "utf-8");
     return JSON.parse(content) as Record<string, unknown>;
-  } catch {
-    return null;
+  } catch (err: unknown) {
+    if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw err;
   }
 }
 
 async function writeJsonFileAtomic(filePath: string, data: Record<string, unknown>): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const tempPath = `${filePath}.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  await fs.writeFile(tempPath, JSON.stringify(data, null, 2), { encoding: "utf-8", mode: 0o600 });
-  await fs.rename(tempPath, filePath);
+  try {
+    await fs.writeFile(tempPath, JSON.stringify(data, null, 2), { encoding: "utf-8", mode: 0o600 });
+    await fs.rename(tempPath, filePath);
+  } catch (err) {
+    await fs.unlink(tempPath).catch(() => {});
+    throw err;
+  }
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -54,6 +62,9 @@ const plugin = definePlugin({
       };
     });
 
+    // Access control: the settingsPage slot is gated to instance admins by the
+    // host. The plugin SDK enforces the "instance.settings.register" capability
+    // before routing any action/data call to this worker.
     ctx.actions.register("save-claude-config", async (params: Record<string, unknown>) => {
       const claudeJson = params.claudeJson ?? null;
       const credentialsJson = params.credentialsJson ?? null;
