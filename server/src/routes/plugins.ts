@@ -139,6 +139,14 @@ const BUNDLED_PLUGIN_EXAMPLES: AvailablePluginExample[] = [
     localPath: "packages/plugins/examples/plugin-kitchen-sink-example",
     tag: "example",
   },
+  {
+    packageName: "@paperclipai/plugin-claude-config-editor",
+    pluginKey: "paperclip-claude-config-editor",
+    displayName: "Claude Config Editor",
+    description: "Edit Claude Code configuration files (.claude.json and .credentials.json) through the Paperclip settings UI.",
+    localPath: "packages/plugins/examples/plugin-claude-config-editor",
+    tag: "example",
+  },
 ];
 
 function listBundledPluginExamples(): AvailablePluginExample[] {
